@@ -110,6 +110,18 @@ function getIdleResetSeconds(): number {
   return getSecondsFromSettings(settings.idleResetLengthSeconds);
 }
 
+// A screen lock counts as a completed break once it has lasted at least
+// two-thirds of a break's length. This is derived from the configured break
+// length rather than the idle-reset threshold, so locking the screen can be
+// credited quickly without also making the unlocked idle detection trigger
+// early.
+function getLockResetSeconds(): number {
+  const settings: Settings = getSettings();
+  return getSecondsFromSettings(
+    Math.round((settings.breakLengthSeconds * 2) / 3),
+  );
+}
+
 function getBreakSeconds(): number {
   const settings: Settings = getSettings();
   return getSecondsFromSettings(settings.breakFrequencySeconds);
@@ -247,7 +259,10 @@ function doBreak(): void {
   buildTray();
 }
 
-function checkInWorkingHoursAt(now: moment.Moment, settings: Settings): boolean {
+function checkInWorkingHoursAt(
+  now: moment.Moment,
+  settings: Settings,
+): boolean {
   if (!settings.workingHoursEnabled) {
     return true;
   }
@@ -296,6 +311,13 @@ export function checkIdle(): boolean {
   ) as IdleState;
 
   if (state === IdleState.Locked) {
+    if (!settings.lockScreenAsBreakEnabled) {
+      // Locking is not treated as a break, so ignore the lock entirely and let
+      // breaks schedule as normal.
+      lockStart = null;
+      return false;
+    }
+
     if (!lockStart) {
       lockStart = new Date();
       return false;
@@ -303,7 +325,7 @@ export function checkIdle(): boolean {
       const lockSeconds = Number(
         ((+new Date() - +lockStart) / 1000).toFixed(0),
       );
-      return lockSeconds > getIdleResetSeconds();
+      return lockSeconds > getLockResetSeconds();
     }
   }
 

@@ -11,6 +11,7 @@ import AdvancedCard from "./settings/advanced-card";
 import AudioCard from "./settings/audio-card";
 import BackdropCard from "./settings/backdrop-card";
 import BreaksCard from "./settings/breaks-card";
+import LockBreaksCard from "./settings/lock-breaks-card";
 import SettingsCard from "./settings/settings-card";
 import SettingsHeader from "./settings/settings-header";
 import SkipCard from "./settings/skip-card";
@@ -166,6 +167,11 @@ export default function SettingsEl() {
               settingsDraft={settingsDraft}
               onSwitchChange={handleSwitchChange}
               onDateChange={handleDateChange}
+            />
+
+            <LockBreaksCard
+              settingsDraft={settingsDraft}
+              onSwitchChange={handleSwitchChange}
             />
 
             <SnoozeCard
